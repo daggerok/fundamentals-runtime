@@ -57,3 +57,10 @@ open http://localhost:3000/
 - [SEC EDGAR API](https://www.sec.gov/edgar/sec-api-documentation)
 
 *Проект находится в активной разработке.*
+
+---
+
+## Dependency updates (как в csv / fundamentals)
+
+- **CI** job `npm-check-updates` — на каждый push/PR: `bunx npm-check-updates -u` + `bun install` (без коммита).
+- **Ручной апгрейд и push**: Actions → **Dependency Updates** → Run workflow. Обновляет `package.json` / `bun.lock`, коммитит и пушит в выбранную ветку.
