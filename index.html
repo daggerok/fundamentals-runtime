@@ -39,6 +39,12 @@
         html:not(.dark) input[type=range].scale-slider{background:#cbd5e1}
         html:not(.dark) input[type=range].scale-slider::-webkit-slider-thumb{background:#059669}
         html:not(.dark) input[type=range].scale-slider::-moz-range-thumb{background:#059669}
+    
+        /* Dark mode readability (tables/cards) */
+        html.dark, html.dark body { background:#020617 !important; color:#f1f5f9 !important; color-scheme: dark; }
+        html.dark table { color:#e2e8f0; }
+        html.dark table td { color:inherit; }
+        html.dark table th { color:#94a3b8; }
     </style>
 </head>
 <body class="min-h-screen">
@@ -210,7 +216,7 @@
 
         useEffect(()=>{if(cached?.facts&&cached?.company){log(`Restored ${cached.company.ticker}`);setPd(proc(cached.facts,mode));}},[]);
         useEffect(()=>{sp({ticker,mode,view,dark,showDebug,scaleSlider});},[ticker,mode,view,dark,showDebug,scaleSlider]);
-        useEffect(()=>{document.documentElement.classList.toggle('dark',dark);document.body.style.backgroundColor=dark?'#0f172a':'#f8fafc';document.body.style.color=dark?'#f1f5f9':'#0f172a';},[dark]);
+        useEffect(()=>{document.documentElement.classList.toggle('dark',dark);document.documentElement.style.backgroundColor=dark?'#020617':'#f8fafc';document.documentElement.style.color=dark?'#f1f5f9':'#0f172a';document.body.style.backgroundColor=dark?'#020617':'#f8fafc';document.body.style.color=dark?'#f1f5f9':'#0f172a';},[dark]);
 
         const tl=useMemo(()=>{if(!tickers)return[];return Object.values(tickers).map(c=>({ticker:c.ticker,title:c.title,cik:String(c.cik_str).padStart(10,'0')}));},[tickers]);
 
@@ -252,15 +258,15 @@
 
         const hd=s=>s&&s.some(d=>d.value!=null);
 
-        const bg=dark?'bg-slate-900/95':'bg-white/95';
+        const bg=dark?'bg-slate-950/95 text-slate-100':'bg-white/95 text-slate-900';
         const bdr=dark?'border-slate-800':'border-slate-200';
-        const card=dark?'bg-slate-800 border-slate-700/50':'bg-white border-slate-200 shadow-sm';
+        const card=dark?'bg-slate-800 border-slate-600 text-slate-100':'bg-white border-slate-200 text-slate-900 shadow-sm';
         const inp=dark?'bg-slate-800 border-slate-700 text-emerald-400':'bg-slate-50 border-slate-300 text-emerald-700';
-        const mt=dark?'text-slate-500':'text-slate-400';
-        const t1=dark?'text-slate-300':'text-slate-700';
-        const t2=dark?'text-slate-400':'text-slate-500';
+        const mt=dark?'text-slate-400':'text-slate-500';
+        const t1=dark?'text-slate-100':'text-slate-800';
+        const t2=dark?'text-slate-300':'text-slate-600';
         const nc=dark?'text-red-400':'text-red-600';
-        const sB=dark?'bg-slate-800/90':'bg-white/90';
+        const sB=dark?'bg-slate-800':'bg-white';
         const hR=dark?'hover:bg-slate-700/20':'hover:bg-slate-50';
         const scCls=dark?'dark-scroll':'light-scroll';
         const sugBg=dark?'bg-slate-800 border-slate-700':'bg-white border-slate-200 shadow-lg';
