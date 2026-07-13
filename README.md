@@ -2,33 +2,14 @@
 
 Fundamentals app using SEC free financial data API [article](https://dev.to/m0dus/the-sec-has-a-free-financial-data-api-that-nobody-talks-about-dfi)
 
-<!-- https://arena.ai/c/019f1c6c-8842-7637-852c-fdba43e83e64 -->
-
 ## Быстрый старт / Quick start
 
-1. Запустите прокси для www.sec.gov:
-
 ```bash
-bunx local-cors-proxy --proxyUrl https://www.sec.gov --port 8011
+bun install -E
+bun stop ; bun kill ; bun ps ; bun start ; bun logs
 ```
 
-2. Запустите прокси для data.sec.gov:
-
-```bash
-bunx local-cors-proxy --proxyUrl https://data.sec.gov --port 8012
-```
-
-3. Запустите статический сервер:
-
-```bash
-bunx serve .
-```
-
-4. Откройте приложение:
-
-```bash
 open http://localhost:3000/
-```
 
 ---
 
@@ -72,7 +53,7 @@ open http://localhost:3000/
 
 ## Ссылки
 
-- [GitHub Pages](https://daggerok.github.io/fundamentals/)
+- [GitHub Pages](https://daggerok.github.io/fundamentals-runtime/)
 - [SEC EDGAR API](https://www.sec.gov/edgar/sec-api-documentation)
 
 *Проект находится в активной разработке.*
