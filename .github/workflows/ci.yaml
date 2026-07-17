@@ -12,7 +12,7 @@ jobs:
     steps:
       # On pull requests, use the contributor's head commit rather than GitHub's
       # synthetic merge commit. Only that ref's two most recent commits are fetched.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 2
@@ -21,7 +21,7 @@ jobs:
         with:
           bun-version: latest
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/package.json', '**/bun.lock') }}
@@ -40,7 +40,7 @@ jobs:
     steps:
       # On pull requests, use the contributor's head commit rather than GitHub's
       # synthetic merge commit. Only that ref's two most recent commits are fetched.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 2
@@ -49,7 +49,7 @@ jobs:
         with:
           bun-version: latest
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-ncu-${{ hashFiles('**/package.json') }}
