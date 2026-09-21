@@ -63,6 +63,22 @@
     const WP=[8011,8010,8080,3000].map(p=>`http://localhost:${p}/proxy`);
     const DP=[8012,8010,8080,3000].map(p=>`http://localhost:${p}/proxy`);
 
+    const SEC_WWW='https://www.sec.gov';
+    const SEC_DATA='https://data.sec.gov';
+    // Public, key-less CORS proxies usable from a static GitHub Pages site (no server of our own).
+    // Only api.codetabs.com fit that bar at research time - allorigins.win and corsproxy.io
+    // were either unreachable or now require a paid API key. Add more entries here (as
+    // {name, wrap}) if a working free alternative shows up later, e.g. when codetabs gets blocked.
+    const PUBLIC_PROXIES=[
+        {name:'codetabs',wrap:url=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`},
+    ];
+    // Public proxy mode is opt-in only (never the default for random visitors of the hosted
+    // site): it's on when the page URL has ?mode=online, and the on/off button itself is only
+    // shown when a ?mode=... param was present on load.
+    const QP=new URLSearchParams(location.search);
+    const HAS_MODE_PARAM=QP.has('mode');
+    const INITIAL_ONLINE=QP.get('mode')==='online';
+
     const CON={
         revenue:['RevenueFromContractWithCustomerExcludingAssessedTax','Revenues','SalesRevenueNet','SalesRevenueGoodsNet','RevenueFromContractWithCustomerIncludingAssessedTax'],
         costOfRevenue:['CostOfGoodsAndServicesSold','CostOfRevenue','CostOfGoodsSold'],grossProfit:['GrossProfit'],operatingIncome:['OperatingIncomeLoss'],
@@ -103,7 +119,12 @@
         amber:{dark:{line:'#fbbf24',fill:'rgba(251,191,36,0.15)',text:'text-amber-400'},light:{line:'#d97706',fill:'rgba(217,119,6,0.12)',text:'text-amber-700'}},
     };
 
-    async function probe(c,p){const e=[];for(const b of c){try{const r=await fetch(b+p);if(r.ok)return{base:b,res:r};e.push(`${b}${p}→${r.status}`);}catch(x){e.push(`${b}${p}→${x.message}`);}}throw new Error('Proxy not reachable:\n'+e.join('\n'));}
+    async function probe(cands){const e=[];for(const c of cands){try{const r=await fetch(c.url);if(r.ok)return{label:c.label,res:r};e.push(`${c.label}→${r.status}`);}catch(x){e.push(`${c.label}→${x.message}`);}}throw new Error('Proxy not reachable:\n'+e.join('\n'));}
+
+    const localCands=(bases,path)=>bases.map(b=>({label:b,url:b+path}));
+    const publicCands=(host,path)=>PUBLIC_PROXIES.map(p=>({label:p.name,url:p.wrap(host+path)}));
+    const wwwCands=(online,path)=>online?publicCands(SEC_WWW,path):localCands(WP,path);
+    const dataCands=(online,path)=>online?publicCands(SEC_DATA,path):localCands(DP,path);
 
     function exM(facts,keys,mode){
         if(!facts?.['us-gaap'])return[];const g=facts['us-gaap'];let r=[];
@@ -207,6 +228,7 @@
         const[showSug,setShowSug]=useState(false);
         const[selIdx,setSelIdx]=useState(-1);
         const[scaleSlider,setScaleSlider]=useState(prefs.scaleSlider??DEFAULT_SCALE_SLIDER);
+        const[online,setOnline]=useState(INITIAL_ONLINE);
         const iRef=useRef(null);
         const sRef=useRef(null);
 
@@ -220,7 +242,7 @@
 
         const tl=useMemo(()=>{if(!tickers)return[];return Object.values(tickers).map(c=>({ticker:c.ticker,title:c.title,cik:String(c.cik_str).padStart(10,'0')}));},[tickers]);
 
-        useEffect(()=>{init();},[]);
+        useEffect(()=>{init();},[online]);
         useEffect(()=>{if(factsCache&&company)setPd(proc(factsCache,mode));},[mode]);
 
         useEffect(()=>{const h=e=>{if(sRef.current&&!sRef.current.contains(e.target)&&iRef.current&&!iRef.current.contains(e.target))setShowSug(false);};document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h);},[]);
@@ -240,8 +262,9 @@
         };
 
         const init=async()=>{
-            setTkL(true);setError(null);setLogs([]);log('Probing www.sec.gov proxy…');
-            try{const{base,res}=await probe(WP,'/files/company_tickers.json');setWwwOk(true);setWwwBase(base);log(`✅ www proxy: ${base}`);const d=await res.json();setTickers(d);log(`✅ ${Object.keys(d).length} tickers`);}
+            setTkL(true);setError(null);setLogs([]);setWwwOk(false);
+            log(online?'Probing public CORS proxy (www.sec.gov)…':'Probing www.sec.gov proxy…');
+            try{const{label,res}=await probe(wwwCands(online,'/files/company_tickers.json'));setWwwOk(true);setWwwBase(label);log(`✅ www proxy: ${label}`);const d=await res.json();setTickers(d);log(`✅ ${Object.keys(d).length} tickers`);}
             catch(e){log(`❌ ${e.message}`);setError(e.message);}finally{setTkL(false);}
         };
 
@@ -251,7 +274,7 @@
             try{
                 const co=Object.values(tickers).find(c=>c.ticker===sym);if(!co)throw new Error(`"${sym}" not found`);
                 const cik=String(co.cik_str).padStart(10,'0');log(`${sym} → CIK ${cik}`);
-                const{base,res}=await probe(DP,`/api/xbrl/companyfacts/CIK${cik}.json`);setDataOk(true);log(`✅ data proxy: ${base}`);if(wwwBase)log(`✅ www proxy: ${wwwBase}`);
+                const{label,res}=await probe(dataCands(online,`/api/xbrl/companyfacts/CIK${cik}.json`));setDataOk(true);log(`✅ data proxy: ${label}`);if(wwwBase)log(`✅ www proxy: ${wwwBase}`);
                 const facts=(await res.json()).facts;setFactsCache(facts);const comp={title:co.title,cik,ticker:sym};setCompany(comp);setPd(proc(facts,mode));sc({facts,company:comp});log('✅ Done');
             }catch(e){log(`❌ ${e.message}`);setError(e.message);cc();}finally{setLoading(false);}
         };
@@ -286,6 +309,13 @@
                     <div className="px-4 xl:px-8">
                         <div className="flex items-center gap-3 py-3">
                             <button onClick={()=>setShowDebug(p=>!p)} className={`flex-shrink-0 text-xs px-2 py-1.5 rounded transition-colors ${showDebug?(dark?'bg-slate-700 text-slate-300':'bg-slate-200 text-slate-600'):(dark?'text-slate-600 hover:text-slate-400':'text-slate-400 hover:text-slate-600')}`} title="Toggle console">⌘</button>
+                            {HAS_MODE_PARAM&&(
+                                <button onClick={()=>setOnline(o=>!o)}
+                                        className={`flex-shrink-0 text-sm px-2 py-1.5 rounded transition-colors ${online?(dark?'text-emerald-400 hover:text-emerald-300':'text-emerald-600 hover:text-emerald-700'):(dark?'text-slate-500 hover:text-slate-400':'text-slate-400 hover:text-slate-600')}`}
+                                        title={online?'Public CORS proxy (codetabs.com): ON - click to switch to local proxy':'Public CORS proxy: OFF - click to use codetabs.com (no local proxy needed)'}>
+                                    {online?'🌐':'📴'}
+                                </button>
+                            )}
                             <div className="flex gap-1.5 flex-shrink-0" title={`www: ${wwwOk?'✓':'✗'}\ndata: ${dataOk?'✓':'…'}`}>
                                 <div className={`h-2.5 w-2.5 rounded-full ${wwwOk?dotOn:'bg-red-500'}`}/>
                                 <div className={`h-2.5 w-2.5 rounded-full ${dataOk?dotOn:tkL||loading?'bg-yellow-400 animate-pulse':dotOff}`}/>
@@ -334,7 +364,15 @@
                 </div>
 
                 <div className="px-4 xl:px-8 py-6">
-                    {!tickers&&!tkL&&(
+                    {!tickers&&!tkL&&online&&(
+                        <div className={`${card} border rounded-xl p-5 mb-6 text-sm max-w-3xl mx-auto`}>
+                            <p className={`font-bold mb-3 ${t1}`}>Using public CORS proxy ({PUBLIC_PROXIES.map(p=>p.name).join(', ')})</p>
+                            <p className={t2}>Couldn't reach it just now - it may be temporarily down, or blocked by your network.</p>
+                            <button onClick={init} className="mt-3 text-emerald-500 text-xs hover:underline">↻ Retry</button>
+                        </div>
+                    )}
+
+                    {!tickers&&!tkL&&!online&&(
                         <div className={`${card} border rounded-xl p-5 mb-6 text-sm max-w-3xl mx-auto`}>
                             <p className={`font-bold mb-3 ${t1}`}>Start two proxy terminals:</p>
                             <div className="grid md:grid-cols-2 gap-3">
