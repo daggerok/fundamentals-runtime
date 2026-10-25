@@ -41,6 +41,23 @@ open http://localhost:3000/
 
 ---
 
+## ⚠️ Прототип: цифры ненадёжны / Prototype: numbers are unreliable
+
+Периоды группируются по `fy`/`fp` подачи, поэтому значение может относиться к другому году или кварталу (сравнительные данные прошлого года, итоги с начала года). Приложение показывает это предупреждение в баннере. Корректные цифры: [fundamentals](https://daggerok.github.io/fundamentals/).
+
+Periods are keyed by the filing's `fy`/`fp`, so a value can belong to another year or quarter (prior-year comparatives, year-to-date totals). The app shows this in a banner. Correct numbers: [fundamentals](https://daggerok.github.io/fundamentals/).
+
+### SEC User-Agent
+
+SEC требует `User-Agent` с контактом. `local-cors-proxy` (`bun serve:proxy-www`, `bun serve:proxy-data`) пересылает User-Agent браузера, и SEC может ответить 403. Надёжнее запустить прокси из [fundamentals](https://github.com/daggerok/fundamentals): те же порты 8011 и 8012 и те же пути `/proxy/...`, но с нужным User-Agent:
+
+SEC requires a `User-Agent` with contact details. `local-cors-proxy` forwards the browser's User-Agent, so SEC may answer 403. The proxies of [fundamentals](https://github.com/daggerok/fundamentals) serve the same ports 8011 and 8012 and the same `/proxy/...` paths with a proper User-Agent:
+
+```bash
+git clone https://github.com/daggerok/fundamentals.git && cd fundamentals
+bun install -E && bun serve:proxy
+```
+
 ## Ограничения текущей версии
 
 - Однофайловое HTML-приложение (намеренно для прототипа)

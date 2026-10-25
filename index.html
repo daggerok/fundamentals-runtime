@@ -334,6 +334,9 @@
                 </div>
 
                 <div className="px-4 xl:px-8 py-6">
+                    <div role="alert" data-prototype-warning className="bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 px-4 py-3 rounded-xl mb-6 text-sm max-w-3xl mx-auto">
+                        <span className="font-bold">Prototype, numbers unreliable.</span> Periods are keyed by the filing's fiscal year, so a value can come from another year or quarter (prior-year comparatives, year-to-date totals). For real numbers use <a href="https://daggerok.github.io/fundamentals/" className="underline font-semibold">fundamentals</a>.
+                    </div>
                     {!tickers&&!tkL&&(
                         <div className={`${card} border rounded-xl p-5 mb-6 text-sm max-w-3xl mx-auto`}>
                             <p className={`font-bold mb-3 ${t1}`}>Start two proxy terminals:</p>
